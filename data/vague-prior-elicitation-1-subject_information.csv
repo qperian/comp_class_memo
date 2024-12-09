@@ -1,0 +1,101 @@
+"workerid","language","enjoyment","gender","age","problems","comments","asses","fairprice","education"
+0,"English",2,"Male",30,"","","Yes","50 cents is a fantastic rate for the work.",3
+1,"English",2,"Female",28,"None","Easy to understand and complete","Yes","40 cents",2
+2,"English",2,"Male",21,"no","","Yes",".50",2
+3,"english",2,"Male",35,"","","Yes",".50",3
+4,"English",1,"Male",41,"n/a","","Yes",".50",3
+5,"English ",1,"Male",30,"No problems occurred ","","Yes",".50",3
+6,"english",2,"Male",34,"no","","Yes",".5",3
+7,"english",1,"Female",43,"no","none ty","Yes","0.50",3
+8,"English",2,"Male",67,"none","Thanks","Yes",".50",2
+9,"English",2,"Male",28,"","","Yes","Yes",2
+10,"English",1,"Male",29,"No","","Yes","Yes",-1
+11,"English",1,"Male",37,"No","","Yes",".50",1
+12,"English",1,"Male",24,"no","","Yes","1.00",1
+13,"english",2,"Female",35,"none","","No","yes",3
+14,"english",2,"Male",29,"","","Yes",".50",1
+15,"English",2,"Male",42,"NO","easy.fun.","Yes",".50",1
+16,"english",2,"Male",28,"no","everything was fun/fine, thank you!","Yes",".50c",3
+17,"English ",1,"Male",38,"No I did not encounter any issues. ","No further comments. Thanks! ","Yes","$1.00 would have been fair.",3
+18,"english",2,"Female",61,"no","","No","",3
+19,"english",2,"Female",54,"no","","Yes",".50",3
+20,"English",1,"Male",40,"None","","Yes","1.00",2
+21,"English",2,"Male",30,"No","","Yes","$1.00",3
+22,"English",1,"Female",28,"No.","N/A","Yes","0.50",2
+23,"English",2,"Male",36,"nope","","Yes",".50",2
+24,"English",2,"Male",36,"Nope","","Yes","50 cents",1
+25,"english",1,"Female",29,"no","","Yes","yes",1
+26,"english",2,"Male",23,"","","Yes",".50",3
+27,"English",2,"Female",42,"No.","Thank you!","Yes","Yes",3
+28,"english",2,"Male",32,"None","I did like the hit but I was confused on some of them.","Confused","0.50",2
+29,"English",1,"Male",54,"No, none.","Best of luck in your research.","Yes","1.00",2
+30,"English",2,"Female",23,"No","","Yes","0.50",2
+31,"English",2,"Male",45,"no","","Yes",".50",4
+32,"English",1,"Female",41,"No","None","Yes",".50",3
+33,"eng",1,"Male",72,"no","","Yes","1.00",3
+34,"English",2,"Male",34,"No","None.","Yes","0.50",1
+35,"English",2,"Male",24,"no","","Yes",".65",2
+36,"English",2,"Male",28,"None","","Yes","0.50",4
+37,"english",2,"Male",39,"none","none","Yes",".50",3
+38,"English",2,"Female",32,"No","","Yes",".50",2
+39,"English",2,"Female",29,"","","Yes",".50",3
+40,"English",2,"Male",26,"","","Yes","Yes",3
+41,"English",2,"Male",36,"no","","Yes","50",3
+42,"english",2,"Female",44,"no","","Yes","yes",3
+43,"english",2,"Male",25,"no","","Yes","50 cents",2
+44,"English",1,"Male",25,"no","","Yes",".5",3
+45,"english",2,"Female",44,"no","","Yes","0.50",2
+46,"English",2,"Female",26,"No problems","","Yes","0.60",3
+47,"English",2,"Female",29,"no","","Yes","1.00",2
+48,"English",2,"Female",29,"no","Thank you, good luck with your study, have a great day!","Yes","yes",1
+49,"english",2,"Female",32,"none","","Yes","0.50",3
+50,"english",2,"Female",63,"no","no problems","Yes",".50",2
+51,"english",2,"Male",50,"no","","Yes","50",3
+52,"English",2,"Male",20,"None","","Yes","0.50",2
+53,"english",1,"Female",30,"no","","Yes",".50",2
+54,"English",2,"Male",39,"None","","Yes","50 cents",3
+55,"English",2,"Male",35,"No","","Yes",".50",2
+56,"English",1,"Male",47,"no","This was interesting.","Yes","yes",2
+57,"English",2,"Male",26,"No","Fun survey","Yes",".75",2
+58,"English",1,"Female",20,"No","","Yes",".50",2
+59,"english",2,"Male",38,"no","","Yes","50c",3
+60,"English",1,"Male",42,"No","","No",".20",3
+61,"english",1,"Male",33,"none","","Yes","1",3
+62,"English",2,"Male",48,"No","","Yes",".5",4
+63,"English",2,"Female",28,"No.","Thanks for paying me fairly for my work.","Yes",".50",2
+64,"english",2,"Male",27,"no","fun!","Yes",".50",3
+65,"english",1,"Female",53,"no","","Yes",".50",3
+66,"English",2,"Female",30,"no","thank you","Yes",".50",2
+67,"English",2,"Female",27,"na","","Yes","It was pretty fair.",3
+68,"English",1,"Male",27,"no","I dont know the purpose of the experiment","Yes","50 cents",2
+69,"English",1,"Male",23,"None!","","No","sure",3
+70,"English",1,"Male",42,"none","","Yes","0.50",1
+71,"english",2,"Female",28,"no","","Yes","0.50",3
+72,"English",2,"Female",24,"","","Yes",NA,3
+73,"english",2,"Female",36,"no","none","Yes",NA,4
+74,"English",2,"Male",70,"no","","Yes",NA,4
+75,"English",1,"Female",33,"no","","Yes","1",1
+76,"english",2,"Male",37,"no","","Yes",NA,3
+77,"english",2,"Female",41,"no","","Yes",NA,3
+78,"English",2,"Female",27,"no","","Yes",NA,3
+79,"English",2,"Male",34,"","","Yes",NA,3
+80,"English",2,"Male",50,"","","Yes",NA,4
+81,"English",1,"Male",25,"No","","Yes",".75",3
+82,"English",1,"Male",27,"No","NOne","Yes","0.50",3
+83,"English",2,"Female",30,"No","I have no further comments.","Yes","50 cents",2
+84,"English  ",1,"Female",38,"No","None","Yes",".35",1
+85,"English",1,"Male",45,"no","","Yes",".50",2
+86,"",2,"Female",NA,"no","","Yes","",3
+87,"English",2,"Male",43,"no, it all worked fine","Nothing else I can think of","Yes",".50",3
+88,"English",2,"Male",34,"No problems.","","Yes","",1
+89,"English",1,"Female",39,"No","No comments","Yes","1.00",3
+90,"English",2,"Male",26,"no","","Yes",".50",2
+91,"english",1,"Female",27,"no","","Yes",".50",2
+92,"english",2,"Male",30,"no","thanks!","Yes",".50",2
+93,"English",2,"Male",39,"no","Good study.","Yes",".50",3
+94,"English",2,"Male",29,"no","","Yes","yes",2
+95,"english",2,"Female",49,"no problems.","no comments, thank you","Yes",".50 is good, thank you",3
+96,"english",2,"Male",24,"no","fun","Yes",".6",2
+97,"English",1,"Female",35,"none","","No","0.50",2
+98,"english",2,"Male",30,"none","","Yes",".50",3
+99,"English",2,"Female",34,NA,NA,"Yes",NA,2
