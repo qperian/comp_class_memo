@@ -1,12 +1,13 @@
 from memo import memo
 import jax
 import jax.numpy as np
-from scipy.stats import norm
+from jax.scipy.stats import norm
 from functools import partial
 
 
-N = [0, 1, 2, 3]  # number of nice people
 U = [0, 1, 2]     # utterance: {none, some, all} of the people are nice
+expt1DataFile = "../data/class-elicitation-full-trials.csv"
+expt2DataFile = "../data/vague-prior-elicitation-1-trials.csv"
 
 Utterances = {
     "positive": [0,1,2],#["positive_adjective", "positive_sub", "positive_super"],
@@ -22,7 +23,6 @@ def meaning(utterance, state, threshold):
 
     returns an array of boolean meaning values for all states
     '''
-    
     utterance_form = "positive"
     # utterance_form = get_form(utterance)
     if utterance_form == "positive":
@@ -32,37 +32,13 @@ def meaning(utterance, state, threshold):
     else:
         raise ValueError("incorrect utterance format -- form is not positive or negative")
 
+@jax.jit
+def state_gaussian_param0(comp_class, sub_mu, sub_sigma):
+    return (1-comp_class)*sub_mu
+@jax.jit
+def state_gaussian_param1(comp_class, sub_mu, sub_sigma):
+    return (1-comp_class)*sub_sigma+comp_class
 
-# states = np.array([13, 14, 15, 16, 17])
-# print(meaning("positive", states, 16))
-
-
-expt1DataFile = "../data/class-elicitation-full-trials.csv"
-expt2DataFile = "../data/vague-prior-elicitation-1-trials.csv"
-
-
-# @jax.jit
-# def meaning(n, u):  # (none)  (some)  (all)
-#     return np.array([ n == 0, n > 0, n == 3 ])[u]
-
-# define space of possible states
-
-
-def state_gaussian_params(comp_class, sub_mu, sub_sigma):
-    '''
-    determine which gaussian parameters to use for the states depending on whether it's the 
-    subordinate or superordinate comparison class
-    '''
-    if comp_class == 0:
-        return (sub_mu, sub_sigma)
-    elif comp_class == 1:
-        return (0, 1)
-    else:
-        raise ValueError("comparison class is not sub or super")
-
-
-
-# @jax.jit
 @partial(jax.jit, static_argnums=(0, 2))
 def threshold_bins(utterance_form, States, bin_param):
     '''
@@ -76,10 +52,12 @@ def threshold_bins(utterance_form, States, bin_param):
         threshold_func = lambda x: x + (1/(bin_param*2))
     else:
         raise ValueError("incorrect utterance format -- form is not positive or negative")
-    print("Hiya there")
     mapping_func = jax.vmap(threshold_func, 0, 0)       # assumes that the inputted array for States is one-directional
-    print("Seeeya later pal")
     return mapping_func(States)
+
+@jax.jit
+def normal(x, mean, stdev):
+    return norm.pdf(x, loc=mean, scale=stdev)
 
 # States = np.array([1, 2, 3, 4])
 # Thresholds = threshold_bins("negative", States, 3)
@@ -95,16 +73,11 @@ stateParams = {'mu': 0, 'sigma': 1}
 States = np.array(list(map(round, range((stateParams['mu'] - 3*stateParams['sigma'])*bin_param, 
                           (stateParams['mu'] + 3*stateParams['sigma'])*bin_param, 
                           stateParams['sigma']))))/bin_param
-print(States.shape)
-# can't have continuous distribution for memo, need to discretize states/normal distribution for states
-# bubbles = Utterances[utterance_form]
-Thresholds = threshold_bins(utterance_form, States, bin_param)
-# print(Thresholds.shape)
-print("threshole", Thresholds)
-Utterances = np.array(Utterances["positive"])
-print("utterances", Utterances)
 
-print(norm.pdf(0, 0, 1))
+Thresholds = threshold_bins(utterance_form, States, bin_param)
+#print("threshold", Thresholds)
+Utterances = np.array(Utterances["positive"])
+#print("utterances", Utterances)
 
 # @partial(memo, debug_trace=True, debug_print_compiled=True)
 @memo
@@ -114,9 +87,7 @@ def comparison[utterance: Utterances, comp_class: Comp_classes](sub_mu, sub_sigm
     listener: thinks[
         speaker: chooses(comp_class in Comp_classes, wpp = 1),
         #mu, sigma = state_gaussian_params(comp_class, sub_mu, sub_sigma)            # not okay, change so there's no variable assignment
-        speaker: given(true_state in States, wpp =  norm.pdf(true_state, 0, 1)),
-                                            # loc = state_gaussian_params(comp_class, sub_mu, sub_sigma)[0], 
-                                            # scale = state_gaussian_params(comp_class, sub_mu, sub_sigma)[1])),
+        speaker: given(true_state in States, wpp =  normal(true_state,sub_mu, sub_sigma)),
         # Thresholds = threshold_bins(utterance_form, States, bin_param)        # can utterance/form be passed in here if speaker has not chosen it yet?
         speaker: chooses(threshold in Thresholds, wpp = 1),
         speaker: chooses(utterance in Utterances, wpp = exp(imagine[
@@ -132,10 +103,4 @@ def comparison[utterance: Utterances, comp_class: Comp_classes](sub_mu, sub_sigm
     listener: chooses(comp_class in Comp_classes, wpp = E[speaker.comp_class == comp_class])
     return E[listener.comp_class == comp_class]#"sub"]
 
-# print(comparison(0,0.5))
-
-
-# np.array([norm.pdf(state, 
-#                                             loc = state_gaussian_params(comp_class, sub_mu, sub_sigma)[0], 
-#                                             scale = state_gaussian_params(comp_class, sub_mu, sub_sigma)[1])
-#                                             for state in States])
+print(comparison(4,0.1))
