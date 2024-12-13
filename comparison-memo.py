@@ -3,15 +3,15 @@ import jax
 import jax.numpy as np
 from jax.scipy.stats import norm
 from functools import partial
+from jax import lax
 
 
-U = [0, 1, 2]     # utterance: {none, some, all} of the people are nice
 expt1DataFile = "../data/class-elicitation-full-trials.csv"
 expt2DataFile = "../data/vague-prior-elicitation-1-trials.csv"
 
 Utterances = {
-    "positive": [0,1,2],#["positive_adjective", "positive_sub", "positive_super"],
-    "negative": [3,4,5]#["negative_adjective", "negative_sub", "negative_super"]
+    "positive": [1,2,3],#["positive_silence", "positive_sub", "positive_super"],
+    "negative": [-1,-2,-3]#["negative_silence", "negative_sub", "negative_super"]
 }
 
 @partial(jax.jit, static_argnums=(0,1))
@@ -23,20 +23,17 @@ def meaning(utterance, state, threshold):
 
     returns an array of boolean meaning values for all states
     '''
-    utterance_form = "positive"
     # utterance_form = get_form(utterance)
-    if utterance_form == "positive":
-        return state > threshold
-    elif utterance_form == "negative":
-        return state < threshold
-    else:
-        raise ValueError("incorrect utterance format -- form is not positive or negative")
+    return lax.cond(utterance > 0, lambda _ : state > threshold, 
+                    lambda _ : state < threshold, 0)
+    # else:
+    #     raise ValueError("incorrect utterance format -- form is not positive or negative")
 
-@jax.jit
-def state_gaussian_param0(comp_class, sub_mu, sub_sigma):
+@partial(jax.jit, static_argnums=(1)) ## 0 is sub, 1 super
+def mu_finder(comp_class, sub_mu):
     return (1-comp_class)*sub_mu
-@jax.jit
-def state_gaussian_param1(comp_class, sub_mu, sub_sigma):
+@partial(jax.jit, static_argnums=(1))
+def sigma_finder(comp_class, sub_sigma):
     return (1-comp_class)*sub_sigma+comp_class
 
 @partial(jax.jit, static_argnums=(0, 2))
@@ -63,6 +60,10 @@ def normal(x, mean, stdev):
 # Thresholds = threshold_bins("negative", States, 3)
 # print(type(Thresholds))
 # print(Thresholds)
+@jax.jit
+def utterance_to_cc(utterance, default):
+    utterance = np.abs(utterance)
+    return (utterance-2)*(utterance-3)*default/2+(utterance-1)*(utterance-2)/2
 
 Comp_classes = [0,1]
 bin_param = 3
@@ -76,31 +77,37 @@ States = np.array(list(map(round, range((stateParams['mu'] - 3*stateParams['sigm
 
 Thresholds = threshold_bins(utterance_form, States, bin_param)
 #print("threshold", Thresholds)
-Utterances = np.array(Utterances["positive"])
+Utterances = np.array(Utterances["positive"]+Utterances["negative"])
 #print("utterances", Utterances)
 
 # @partial(memo, debug_trace=True, debug_print_compiled=True)
 @memo
-def comparison[utterance: Utterances, comp_class: Comp_classes](sub_mu, sub_sigma):
+def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_mu, sub_sigma):
     cast: [speaker, listener]
-    # listener: knows(comp_class)
+    # listener: knows(guess_comp_class)
+    # listener: knows(guess_utterance)
+    # listener: knows(guess_state)
+
     listener: thinks[
         speaker: chooses(comp_class in Comp_classes, wpp = 1),
         #mu, sigma = state_gaussian_params(comp_class, sub_mu, sub_sigma)            # not okay, change so there's no variable assignment
-        speaker: given(true_state in States, wpp =  normal(true_state,sub_mu, sub_sigma)),
+        speaker: given(state in States, wpp =  normal(state,sub_mu, sub_sigma)),
         # Thresholds = threshold_bins(utterance_form, States, bin_param)        # can utterance/form be passed in here if speaker has not chosen it yet?
-        speaker: chooses(threshold in Thresholds, wpp = 1),
-        speaker: chooses(utterance in Utterances, wpp = exp(imagine[
+        speaker: given(threshold in Thresholds, wpp = 1),
+        speaker: chooses(utterance in Utterances, wpp = imagine[
             listener: knows(utterance),
             listener: knows(threshold),    # is it true that the naive listener knows the threshold?
-            listener: chooses(state in States, wpp = meaning(utterance, state, threshold)),     # should this be based on one threshold or an array of threshold values?
-            Pr[listener.state == true_state]
-        ]))
+            listener: chooses(default_comp_class in Comp_classes, wpp = 1),
+            listener: chooses(state in States, 
+                        wpp = meaning(utterance, state, threshold)*normal(
+                            state, mu_finder(utterance_to_cc(utterance,default_comp_class), sub_mu), 
+                            sigma_finder(utterance_to_cc(utterance,default_comp_class), sub_sigma))),
+            Pr[listener.state == state]
+        ])
     ]
     # return listener[E[speaker.comp_class == comp_class]]
-    listener: observes[speaker.utterance] is utterance
+    listener: observes[speaker.utterance] is real_utterance
     #listener: chooses(state in States, wpp = E[speaker.state == state])         # is this needed?
     listener: chooses(comp_class in Comp_classes, wpp = E[speaker.comp_class == comp_class])
-    return E[listener.comp_class == comp_class]#"sub"]
-
-print(comparison(4,0.1))
+    return E[listener.comp_class == guess_comp_class]
+print(comparison(1,0.4))
