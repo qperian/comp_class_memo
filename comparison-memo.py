@@ -14,7 +14,7 @@ Utterances = {
     "negative": [-1,-2,-3]#["negative_silence", "negative_sub", "negative_super"]
 }
 
-@partial(jax.jit, static_argnums=(0,1))
+@partial(jax.jit, static_argnums=(0,2))
 def meaning(utterance, state, threshold):
     '''
     utterance_form = "positive" or "negative" - can't pass something that's not an array into JAX ahhh
@@ -65,7 +65,7 @@ def utterance_to_cc(utterance, default):
     utterance = np.abs(utterance)
     return (utterance-2)*(utterance-3)*default/2+(utterance-1)*(utterance-2)/2
 
-Comp_classes = [0,1]
+Comp_classes = [0,1]        # 0 = sub, 1 = super
 bin_param = 3
 utterance_form = "positive"
 # define thresholds globally -- nope
@@ -77,7 +77,8 @@ States = np.array(list(map(round, range((stateParams['mu'] - 3*stateParams['sigm
 
 Thresholds = threshold_bins(utterance_form, States, bin_param)
 #print("threshold", Thresholds)
-Utterances = np.array(Utterances["positive"]+Utterances["negative"])
+Utterances = Utterances["positive"]
+# Utterances = np.array(Utterances["positive"]+Utterances["negative"])
 #print("utterances", Utterances)
 
 # @partial(memo, debug_trace=True, debug_print_compiled=True)
@@ -89,15 +90,14 @@ def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_m
     # listener: knows(guess_state)
 
     listener: thinks[
-        speaker: chooses(comp_class in Comp_classes, wpp = 1),
-        #mu, sigma = state_gaussian_params(comp_class, sub_mu, sub_sigma)            # not okay, change so there's no variable assignment
+        speaker: chooses(default_comp_class in Comp_classes, wpp = 1),
         speaker: given(state in States, wpp =  normal(state,sub_mu, sub_sigma)),
-        # Thresholds = threshold_bins(utterance_form, States, bin_param)        # can utterance/form be passed in here if speaker has not chosen it yet?
         speaker: given(threshold in Thresholds, wpp = 1),
         speaker: chooses(utterance in Utterances, wpp = imagine[
             listener: knows(utterance),
             listener: knows(threshold),    # is it true that the naive listener knows the threshold?
-            listener: chooses(default_comp_class in Comp_classes, wpp = 1),
+            # listener: chooses(default_comp_class in Comp_classes, wpp = 1),
+            listener: knows(default_comp_class),
             listener: chooses(state in States, 
                         wpp = meaning(utterance, state, threshold)*normal(
                             state, mu_finder(utterance_to_cc(utterance,default_comp_class), sub_mu), 
@@ -108,6 +108,7 @@ def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_m
     # return listener[E[speaker.comp_class == comp_class]]
     listener: observes[speaker.utterance] is real_utterance
     #listener: chooses(state in States, wpp = E[speaker.state == state])         # is this needed?
-    listener: chooses(comp_class in Comp_classes, wpp = E[speaker.comp_class == comp_class])
+    listener: chooses(comp_class in Comp_classes, wpp = E[speaker.default_comp_class == comp_class])
     return E[listener.comp_class == guess_comp_class]
-print(comparison(1,0.4))
+
+print(comparison(3,0.2))
