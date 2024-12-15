@@ -5,6 +5,7 @@ from jax.scipy.stats import norm
 from functools import partial
 from jax import lax
 import json
+import pandas as pd
 
 
 ## UTIL FUNCTIONS  
@@ -115,12 +116,12 @@ Utterances = np.array(Utterances_all["positive"]+Utterances_all["negative"])
 
 
 # params/priors for expt 2 model
-s2_Utterances = {
+s2_Utterances_all = {
     "positive": [0,1],#[silence_silence, positive_adjective],
     "negative": [0,-1]#[silence_silence, negative_adjective]
 }
+s2_Utterances = np.array(s2_Utterances_all["positive"]+s2_Utterances_all["negative"])
 s2_Comp_classes = [1]   # just super
-s2_Utterances = s2_Utterances[utterance_form]
 
 
 
@@ -159,7 +160,7 @@ def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_m
 
 ## EXPT 2 MODEL
 @memo 
-def exp2_speaker[real_utterance: s2_Utterances](sub_mu, sub_sigma, exp2_alpha1, exp2_alpha2):
+def exp2_speaker[real_utterance: s2_Utterances](sub_mu, sub_sigma, Thresholds, exp2_alpha1, exp2_alpha2):
     # cast: [speaker, listener]
 
     speaker2: given(state_belief in States, wpp = normal(state_belief, sub_mu, sub_sigma))
@@ -188,23 +189,120 @@ def exp2_speaker[real_utterance: s2_Utterances](sub_mu, sub_sigma, exp2_alpha1, 
     # need to incorporate the expected value of the state based on S2 state belief, plus alpha 
 
 # print(exp2_speaker(-2,0.5, exp2_alpha1, exp2_alpha2))
+# print(exp2_speaker(3, 0.5, threshold_bins("positive", States, bin_param), exp2_alpha1, exp2_alpha2)[:2])
+# print(exp2_speaker(3, 0.5, threshold_bins("negative", States, bin_param), exp2_alpha1, exp2_alpha2)[2:])
 
+
+# expt2DataFile
+
+## EXPT 2 MODEL FITTING
+
+# stupid function to get the index needed from each model output
+@partial(jax.jit, static_argnums=(0))
+def get_output_idx_model_expt2(form):   
+    return lax.cond(form == "positive", lambda _: 0, lambda _: 2, 0)
+    # if form == "positive":
+    #     return 0
+    # if form == "negative":
+    #     return 2
+
+# TO FIX -- check the output format
+def get_output_idx_model_expt1(form):
+    if form == "positive":
+        return "hi"
+    if form == "negative":
+        return "blah"
+
+# fit-evaluation function (MSE)
+@partial(jax.jit, static_argnums=(0, 1, 4, 5))
+def mse(data, form, sub_mu, sub_sigma, exp2_alpha1, exp2_alpha2):
+    # model_prob = exp2_speaker(sub_mu, sub_sigma, 
+    #                           threshold_bins(form, States, bin_param), exp2_alpha1, exp2_alpha2)[get_output_idx_model_expt2(form)]
+    return np.mean((data - exp2_speaker(sub_mu, sub_sigma, 
+                              threshold_bins(form, States, bin_param), exp2_alpha1, exp2_alpha2)[get_output_idx_model_expt2(form)]) ** 2)
+grad = jax.value_and_grad(mse)
+
+# print(mse(0, "positive", 3, 0.5, exp2_alpha1, exp2_alpha2))
+
+
+# extract data 
+expt_2_data = pd.read_csv(expt2DataFile)
+
+with open('webgram.json') as json_file:
+    priors = json.load(json_file)
+# create dict with all empirical probabilities from expt 2
+empirical_category_priors = {}
+optimal_sigmas = {}
+optimal_mus = {}
+optimal_expt2_model_outputs = {}
+
+for form in ["positive", "negative"]:
+    form_df = expt_2_data[expt_2_data["form"] == form]
+    
+    empirical_category_priors[form] = {}
+    optimal_sigmas[form] = {}
+    optimal_mus[form] = {}
+    optimal_expt2_model_outputs[form] = {}
+
+    for type, dists in priors.items():
+        type_df = form_df[form_df["super_category"] == type]
+
+        empirical_category_priors[form][type] = {}
+        optimal_sigmas[form][type] = {}
+        optimal_mus[form][type] = {}
+        optimal_expt2_model_outputs[form][type] = {}
+
+        for subcat, freqs in dists['sub'].items():
+            subcat_df = type_df[type_df["sub_category"] == subcat]
+            empirical_prob = subcat_df["response"].mean()
+            # print(form, subcat, empirical_prob)
+            empirical_category_priors[form][type][subcat] = empirical_prob
+
+            sub_mu = 0       # initial value, might need to change
+            sub_sigma = 0.5        # initial value, might need to change
+            sigmas = []
+            mus = []
+            mses = []
+
+            for t in range(10 + 1):
+                print("starting a round of descent")
+                mse_value, mse_grad = grad(empirical_prob, form, sub_mu, sub_sigma, exp2_alpha1, exp2_alpha2)
+                print("graduated!")
+                sub_mu = sub_mu - 0.01 * mse_grad
+                sub_sigma = sub_sigma - 0.01 * mse_grad
+                if t % 10 == 0:
+                    sigmas.append(sub_sigma)
+                    mus.append(sub_mu)
+                    mses.append(mse_value)
+                print(sub_mu, sub_sigma)
+            print("optimal values found for", subcat)
+            optimal_sigmas[form][type][subcat] = sub_sigma
+            optimal_mus[form][type][subcat] = sub_mu
+            optimal_expt2_model_outputs[form][type][subcat] = exp2_speaker(sub_mu, sub_sigma, 
+                                                                           threshold_bins(form, States, bin_param), exp2_alpha1, exp2_alpha2)[get_output_idx_model_expt2(form)]
+
+print(empirical_category_priors)
+print(optimal_mus)
+print(optimal_sigmas)
+print(optimal_expt2_model_outputs)
+
+# print(empirical_category_priors)
 
 
 
 
 ## RUNNING EXPT 1 MODEL
-with open('webgram.json') as json_file:
-    priors = json.load(json_file)
-for type, dists in priors.items():
-    print(type)
-    supPrior = sum(dists['super'])
-    for subcat, freqs in dists['sub'].items():
-        subPrior = sum(freqs)/(sum(freqs)+supPrior)
-        supPrior = supPrior/(subPrior+supPrior)
+# with open('webgram.json') as json_file:
+#     priors = json.load(json_file)
+# for type, dists in priors.items():
+#     print(type)
+#     supPrior = sum(dists['super'])
+#     for subcat, freqs in dists['sub'].items():
+#         subPrior = sum(freqs)/(sum(freqs)+supPrior)
+#         supPrior = supPrior/(subPrior+supPrior)
 
-        print(f"subcat: {subcat}, supercat: {type}")
-        print(comparison(1.2,0.4,threshold_bins("positive", States, bin_param), 
-                         subPrior, supPrior, exp1_alpha, beta)[:3])
-        print(comparison(1.2,0.4,threshold_bins("negative", States, bin_param), 
-                         subPrior, supPrior, exp1_alpha, beta)[3:])
+#         print(f"subcat: {subcat}, supercat: {type}")
+#         print(comparison(1.2,0.4,threshold_bins("positive", States, bin_param), 
+#                          subPrior, supPrior, exp1_alpha, beta)[:3])
+#         print(comparison(1.2,0.4,threshold_bins("negative", States, bin_param), 
+#                          subPrior, supPrior, exp1_alpha, beta)[3:])

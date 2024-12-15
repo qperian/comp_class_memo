@@ -9,13 +9,13 @@
                        "dishwasher": [1535830, 19515]},
                        "super": [1532956]
                      },
-"days of the year": {"sub": {"days in winter":[5332, 80466, 23883],
-                             "days in fall":[652, 12564, 4965, 17366],
-                            "days in summer": [7305, 229054, 100261]},
+"days of the year": {"sub": {"day in Winter":[5332, 80466, 23883],
+                             "day in Fall":[652, 12564, 4965, 17366],
+                            "day in Summer": [7305, 229054, 100261]},
                     "super": [99867, 22959]
                     },
-"online videos": {
-                    "sub": {"cute animal video": [661, 25000],
+"things you watch online": {
+                    "sub": {"video of the cute animal": [661, 25000],
                             "music video": [5440615],
                             "movie": [182764607 ]},
                     "super": [9764, 98708, 712106]     
