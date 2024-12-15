@@ -94,7 +94,7 @@ def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_m
     # listener: knows(guess_state)
 
     listener: thinks[
-        speaker: chooses(default_comp_class in Comp_classes, wpp = catPrior(subprior, superprior, default_comp_class)),
+        speaker: chooses(default_comp_class in Comp_classes, wpp = exp(beta*log(catPrior(subprior, superprior, default_comp_class)))),
         speaker: given(state in States, wpp =  normal(state,sub_mu, sub_sigma)),
         speaker: given(threshold in Thresholds, wpp = 1),
         speaker: chooses(utterance in Utterances, wpp = exp(exp1_alpha*log(imagine[
@@ -117,10 +117,14 @@ for type, dists in priors.items():
     print(type)
     supPrior = sum(dists['super'])
     for subcat, freqs in dists['sub'].items():
-        subPrior = sum(freqs)
+        subPrior = sum(freqs)/(sum(freqs)+supPrior)
+        supPrior = supPrior/(subPrior+supPrior)
+
         print(f"subcat: {subcat}, supercat: {type}")
-        print(comparison(1.6,1.2,0.4,threshold_bins("positive", States, bin_param), subPrior, supPrior)[:3])
-        print(comparison(1.6,1.2,0.4,threshold_bins("negative", States, bin_param), subPrior, supPrior)[3:])
+        print(comparison(1.2,0.4,threshold_bins("positive", States, bin_param), 
+                         subPrior, supPrior, exp1_alpha, beta)[:3])
+        print(comparison(1.2,0.4,threshold_bins("negative", States, bin_param), 
+                         subPrior, supPrior, exp1_alpha, beta)[3:])
 
 
 s2_Utterances = {
