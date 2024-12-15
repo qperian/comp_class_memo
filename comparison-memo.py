@@ -6,14 +6,10 @@ from functools import partial
 from jax import lax
 import json
 
-expt1DataFile = "../data/class-elicitation-full-trials.csv"
-expt2DataFile = "../data/vague-prior-elicitation-1-trials.csv"
 
-Utterances_all = {
-    "positive": [1,2,3],#["positive_silence", "positive_sub", "positive_super"],
-    "negative": [-1,-2,-3]#["negative_silence", "negative_sub", "negative_super"]
-}
+## UTIL FUNCTIONS  
 
+# meaning func for expt 1
 @partial(jax.jit, static_argnums=(0,2))
 def meaning(utterance, state, threshold):
     '''
@@ -23,18 +19,34 @@ def meaning(utterance, state, threshold):
 
     returns an array of boolean meaning values for all states
     '''
-    # utterance_form = get_form(utterance)
     return lax.cond(utterance > 0, lambda _ : state > threshold, 
                     lambda _ : state < threshold, 0)
-    # else:
-    #     raise ValueError("incorrect utterance format -- form is not positive or negative")
+
+# meaning func for expt 2
+@partial(jax.jit, static_argnums=(0,2))
+def s2_meaning(utterance, state, threshold):
+    '''
+    utterance_form = 0 (silence) or 1/-1 (positive super, negative super)
+    states = array of possible states
+    threshold = threshold value to apply scalar adjective
+
+    returns an array of boolean meaning values for all states
+    '''
+    return lax.cond(utterance == 0, lambda _ : True, lambda _ : 
+                    lax.cond(utterance > 0, lambda _ : state > threshold, 
+                             lambda _ : state < threshold, 0), 0)
+    # return lax.cond(utterance > 0, lambda _ : state > threshold, 
+    #                 lambda _ : state < threshold, 0)
+
 
 @partial(jax.jit, static_argnums=(1)) ## 0 is sub, 1 super
 def mu_finder(comp_class, sub_mu):
     return (1-comp_class)*sub_mu
+
 @partial(jax.jit, static_argnums=(1))
 def sigma_finder(comp_class, sub_sigma):
     return (1-comp_class)*sub_sigma+comp_class
+
 
 @partial(jax.jit, static_argnums=(0, 2))
 def threshold_bins(utterance_form, States, bin_param):
@@ -52,31 +64,39 @@ def threshold_bins(utterance_form, States, bin_param):
     mapping_func = jax.vmap(threshold_func, 0, 0)       # assumes that the inputted array for States is one-directional
     return mapping_func(States)
 
+
 @jax.jit
 def normal(x, mean, stdev):
     return norm.pdf(x, loc=mean, scale=stdev)
+
+
 @partial(jax.jit, static_argnums=(0, 1))
 def catPrior(subprior, superprior, comp_class):
     return comp_class*superprior + (1-comp_class)*subprior
+
+
 @jax.jit
 def utterance_to_cc(utterance, default):
     utterance = np.abs(utterance)
     return (utterance-2)*(utterance-3)*default/2+(utterance-1)*(utterance-2)/2
 
-Comp_classes = [0,1]        # 0 = sub, 1 = super
-bin_param = 3
-utterance_form = "positive"
 
+
+## PARAMETERS AND DATA
+
+expt1DataFile = "../data/class-elicitation-full-trials.csv"
+expt2DataFile = "../data/vague-prior-elicitation-1-trials.csv"
+
+
+# params/priors for both models
+bin_param = 3
 stateParams = {'mu': 0, 'sigma': 1}
+# utterance_form = "positive"
 States = np.array(list(map(round, range((stateParams['mu'] - 3*stateParams['sigma'])*bin_param, 
                           (stateParams['mu'] + 3*stateParams['sigma'])*bin_param, 
                           stateParams['sigma']))))/bin_param
+# Thresholds = threshold_bins(utterance_form, States, bin_param)
 
-Thresholds = threshold_bins(utterance_form, States, bin_param)
-#print("threshold", Thresholds)
-#Utterances = Utterances_all["positive"]
-Utterances = np.array(Utterances_all["positive"]+Utterances_all["negative"])
-#print("utterances", Utterances)
 
 # alpha and beta parameters (from paper)
 exp1_alpha = 1.6        # speaker optimality param for expt 1 speaker
@@ -85,9 +105,30 @@ exp2_alpha1 = 3.5       # speaker optimality param for speaker 1
 exp2_alpha2 = 3.2       # speaker optimality param for speaker 2
 
 
+# params/priors for expt 1 model
+Comp_classes = [0,1]        # 0 = sub, 1 = super
+Utterances_all = {
+    "positive": [1,2,3],#["positive_silence", "positive_sub", "positive_super"],
+    "negative": [-1,-2,-3]#["negative_silence", "negative_sub", "negative_super"]
+}
+Utterances = np.array(Utterances_all["positive"]+Utterances_all["negative"])
+
+
+# params/priors for expt 2 model
+s2_Utterances = {
+    "positive": [0,1],#[silence_silence, positive_adjective],
+    "negative": [0,-1]#[silence_silence, negative_adjective]
+}
+s2_Comp_classes = [1]   # just super
+s2_Utterances = s2_Utterances[utterance_form]
+
+
+
+
+## EXPT 1 MODEL
 # @partial(memo, debug_trace=True, debug_print_compiled=True)
 @memo
-def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_mu, sub_sigma,  Thresholds, subprior, superprior, exp1_alpha, beta):
+def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_mu, sub_sigma, Thresholds, subprior, superprior, exp1_alpha, beta):
     cast: [speaker, listener]
     # listener: knows(guess_comp_class)
     # listener: knows(guess_utterance)
@@ -111,46 +152,12 @@ def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_m
     listener: observes[speaker.utterance] is real_utterance
     listener: chooses(comp_class in Comp_classes, wpp = E[speaker.default_comp_class == comp_class])
     return E[listener.comp_class == guess_comp_class]
-with open('webgram.json') as json_file:
-    priors = json.load(json_file)
-for type, dists in priors.items():
-    print(type)
-    supPrior = sum(dists['super'])
-    for subcat, freqs in dists['sub'].items():
-        subPrior = sum(freqs)/(sum(freqs)+supPrior)
-        supPrior = supPrior/(subPrior+supPrior)
-
-        print(f"subcat: {subcat}, supercat: {type}")
-        print(comparison(1.2,0.4,threshold_bins("positive", States, bin_param), 
-                         subPrior, supPrior, exp1_alpha, beta)[:3])
-        print(comparison(1.2,0.4,threshold_bins("negative", States, bin_param), 
-                         subPrior, supPrior, exp1_alpha, beta)[3:])
 
 
-s2_Utterances = {
-    "positive": [0,1],#[silence_silence, positive_adjective],
-    "negative": [0,-1]#[silence_silence, negative_adjective]
-}
-
-s2_Comp_classes = [1]   # just super
-s2_Utterances = s2_Utterances[utterance_form]
 
 
-@partial(jax.jit, static_argnums=(0,2))
-def s2_meaning(utterance, state, threshold):
-    '''
-    utterance_form = 0 (silence) or 1/-1 (positive super, negative super)
-    states = array of possible states
-    threshold = threshold value to apply scalar adjective
 
-    returns an array of boolean meaning values for all states
-    '''
-    return lax.cond(utterance == 0, lambda _ : True, lambda _ : 
-                    lax.cond(utterance > 0, lambda _ : state > threshold, 
-                             lambda _ : state < threshold, 0), 0)
-    # return lax.cond(utterance > 0, lambda _ : state > threshold, 
-    #                 lambda _ : state < threshold, 0)
-
+## EXPT 2 MODEL
 @memo 
 def exp2_speaker[real_utterance: s2_Utterances](sub_mu, sub_sigma, exp2_alpha1, exp2_alpha2):
     # cast: [speaker, listener]
@@ -181,3 +188,23 @@ def exp2_speaker[real_utterance: s2_Utterances](sub_mu, sub_sigma, exp2_alpha1, 
     # need to incorporate the expected value of the state based on S2 state belief, plus alpha 
 
 # print(exp2_speaker(-2,0.5, exp2_alpha1, exp2_alpha2))
+
+
+
+
+
+## RUNNING EXPT 1 MODEL
+with open('webgram.json') as json_file:
+    priors = json.load(json_file)
+for type, dists in priors.items():
+    print(type)
+    supPrior = sum(dists['super'])
+    for subcat, freqs in dists['sub'].items():
+        subPrior = sum(freqs)/(sum(freqs)+supPrior)
+        supPrior = supPrior/(subPrior+supPrior)
+
+        print(f"subcat: {subcat}, supercat: {type}")
+        print(comparison(1.2,0.4,threshold_bins("positive", States, bin_param), 
+                         subPrior, supPrior, exp1_alpha, beta)[:3])
+        print(comparison(1.2,0.4,threshold_bins("negative", States, bin_param), 
+                         subPrior, supPrior, exp1_alpha, beta)[3:])
