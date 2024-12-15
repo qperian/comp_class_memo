@@ -1,0 +1,29 @@
+{"people": {"sub": {"gymnast": [252401], 
+                    "soccer player": [177780], 
+                    "basketball player": [174833]
+                     },
+            "super": [480323270]
+            },
+"kitchen appliances": {"sub": {"bottle opener": [150428], 
+                       "toaster": [882911], 
+                       "dishwasher": [1535830, 19515]},
+                       "super": [1532956]
+                     },
+"days of the year": {"sub": {"days in winter":[5332, 80466, 23883],
+                             "days in fall":[652, 12564, 4965, 17366],
+                            "days in summer": [7305, 229054, 100261]},
+                    "super": [99867, 22959]
+                    },
+"online videos": {
+                    "sub": {"cute animal video": [661, 25000],
+                            "music video": [5440615],
+                            "movie": [182764607 ]},
+                    "super": [9764, 98708, 712106]     
+                },
+"produce": {
+            "sub": {"grape": [2644502],
+                    "apple": [4030073],
+                    "watermelon": [190836, 884072]},
+            "super": [1155398]
+            }
+}

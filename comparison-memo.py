@@ -4,7 +4,7 @@ import jax.numpy as np
 from jax.scipy.stats import norm
 from functools import partial
 from jax import lax
-
+import json
 
 expt1DataFile = "../data/class-elicitation-full-trials.csv"
 expt2DataFile = "../data/vague-prior-elicitation-1-trials.csv"
@@ -55,7 +55,9 @@ def threshold_bins(utterance_form, States, bin_param):
 @jax.jit
 def normal(x, mean, stdev):
     return norm.pdf(x, loc=mean, scale=stdev)
-
+@partial(jax.jit, static_argnums=(0, 1))
+def catPrior(subprior, superprior, comp_class):
+    return comp_class*superprior + (1-comp_class)*subprior
 # States = np.array([1, 2, 3, 4])
 # Thresholds = threshold_bins("negative", States, 3)
 # print(type(Thresholds))
@@ -83,14 +85,14 @@ Utterances = np.array(Utterances_all["positive"]+Utterances_all["negative"])
 
 # @partial(memo, debug_trace=True, debug_print_compiled=True)
 @memo
-def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](alpha,sub_mu, sub_sigma,Thresholds):
+def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](alpha,sub_mu, sub_sigma, Thresholds, subprior, superprior):
     cast: [speaker, listener]
     # listener: knows(guess_comp_class)
     # listener: knows(guess_utterance)
     # listener: knows(guess_state)
 
     listener: thinks[
-        speaker: chooses(default_comp_class in Comp_classes, wpp = 1),
+        speaker: chooses(default_comp_class in Comp_classes, wpp = catPrior(subprior, superprior, default_comp_class)),
         speaker: given(state in States, wpp =  normal(state,sub_mu, sub_sigma)),
         speaker: given(threshold in Thresholds, wpp = 1),
         speaker: chooses(utterance in Utterances, wpp = exp(alpha*log(imagine[
@@ -110,7 +112,14 @@ def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](alpha
     #listener: chooses(state in States, wpp = E[speaker.state == state])         # is this needed?
     listener: chooses(comp_class in Comp_classes, wpp = E[speaker.default_comp_class == comp_class])
     return E[listener.comp_class == guess_comp_class]
-
-print(comparison(1.6,1.2,0.4,threshold_bins("positive", States, bin_param))[:3])
-print(comparison(1.6,1.2,0.4,threshold_bins("negative", States, bin_param))[3:])
+with open('webgram.json') as json_file:
+    priors = json.load(json_file)
+for type, dists in priors.items():
+    print(type)
+    supPrior = sum(dists['super'])
+    for subcat, freqs in dists['sub'].items():
+        subPrior = sum(freqs)
+        print(f"subcat: {subcat}, supercat: {type}")
+        print(comparison(1.6,1.2,0.4,threshold_bins("positive", States, bin_param), subPrior, supPrior)[:3])
+        print(comparison(1.6,1.2,0.4,threshold_bins("negative", States, bin_param), subPrior, supPrior)[3:])
 
