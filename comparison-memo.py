@@ -9,7 +9,7 @@ from jax import lax
 expt1DataFile = "../data/class-elicitation-full-trials.csv"
 expt2DataFile = "../data/vague-prior-elicitation-1-trials.csv"
 
-Utterances = {
+Utterances_all = {
     "positive": [1,2,3],#["positive_silence", "positive_sub", "positive_super"],
     "negative": [-1,-2,-3]#["negative_silence", "negative_sub", "negative_super"]
 }
@@ -56,10 +56,6 @@ def threshold_bins(utterance_form, States, bin_param):
 def normal(x, mean, stdev):
     return norm.pdf(x, loc=mean, scale=stdev)
 
-# States = np.array([1, 2, 3, 4])
-# Thresholds = threshold_bins("negative", States, 3)
-# print(type(Thresholds))
-# print(Thresholds)
 @jax.jit
 def utterance_to_cc(utterance, default):
     utterance = np.abs(utterance)
@@ -76,7 +72,7 @@ States = np.array(list(map(round, range((stateParams['mu'] - 3*stateParams['sigm
 
 Thresholds = threshold_bins(utterance_form, States, bin_param)
 #print("threshold", Thresholds)
-Utterances = Utterances[utterance_form]
+Utterances = Utterances_all[utterance_form]
 # Utterances = np.array(Utterances["positive"]+Utterances["negative"])
 #print("utterances", Utterances)
 
@@ -89,7 +85,7 @@ exp2_alpha2 = 3.2       # speaker optimality param for speaker 2
 
 # @partial(memo, debug_trace=True, debug_print_compiled=True)
 @memo
-def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_mu, sub_sigma, exp1_alpha, beta):
+def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_mu, sub_sigma, Thresholds, exp1_alpha, beta):
     cast: [speaker, listener]
     # listener: knows(guess_comp_class)
     # listener: knows(guess_utterance)
@@ -114,7 +110,10 @@ def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_m
     listener: chooses(comp_class in Comp_classes, wpp = E[speaker.default_comp_class == comp_class])
     return E[listener.comp_class == guess_comp_class]
 
-print(comparison(3,0.2, exp1_alpha, beta))
+# print(comparison(3,0.2, exp1_alpha, beta))
+# print(comparison(1.6,1.2,0.4,threshold_bins("positive", States, bin_param))[:3])
+# print(comparison(1.6,1.2,0.4,threshold_bins("negative", States, bin_param))[3:])
+
 
 s2_Utterances = {
     "positive": [0,1],#[silence_silence, positive_adjective],
