@@ -72,8 +72,8 @@ States = np.array(list(map(round, range((stateParams['mu'] - 3*stateParams['sigm
 
 Thresholds = threshold_bins(utterance_form, States, bin_param)
 #print("threshold", Thresholds)
-Utterances = Utterances_all[utterance_form]
-# Utterances = np.array(Utterances["positive"]+Utterances["negative"])
+#Utterances = Utterances_all["positive"]
+Utterances = np.array(Utterances_all["positive"]+Utterances_all["negative"])
 #print("utterances", Utterances)
 
 # alpha and beta parameters (from paper)
