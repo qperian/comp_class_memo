@@ -9,7 +9,7 @@ from jax import lax
 expt1DataFile = "../data/class-elicitation-full-trials.csv"
 expt2DataFile = "../data/vague-prior-elicitation-1-trials.csv"
 
-Utterances = {
+Utterances_all = {
     "positive": [1,2,3],#["positive_silence", "positive_sub", "positive_super"],
     "negative": [-1,-2,-3]#["negative_silence", "negative_sub", "negative_super"]
 }
@@ -77,13 +77,13 @@ States = np.array(list(map(round, range((stateParams['mu'] - 3*stateParams['sigm
 
 Thresholds = threshold_bins(utterance_form, States, bin_param)
 #print("threshold", Thresholds)
-Utterances = Utterances["positive"]
-# Utterances = np.array(Utterances["positive"]+Utterances["negative"])
+#Utterances = Utterances_all["positive"]
+Utterances = np.array(Utterances_all["positive"]+Utterances_all["negative"])
 #print("utterances", Utterances)
 
 # @partial(memo, debug_trace=True, debug_print_compiled=True)
 @memo
-def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_mu, sub_sigma):
+def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](alpha,sub_mu, sub_sigma,Thresholds):
     cast: [speaker, listener]
     # listener: knows(guess_comp_class)
     # listener: knows(guess_utterance)
@@ -93,7 +93,7 @@ def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_m
         speaker: chooses(default_comp_class in Comp_classes, wpp = 1),
         speaker: given(state in States, wpp =  normal(state,sub_mu, sub_sigma)),
         speaker: given(threshold in Thresholds, wpp = 1),
-        speaker: chooses(utterance in Utterances, wpp = imagine[
+        speaker: chooses(utterance in Utterances, wpp = exp(alpha*log(imagine[
             listener: knows(utterance),
             listener: knows(threshold),    # is it true that the naive listener knows the threshold?
             # listener: chooses(default_comp_class in Comp_classes, wpp = 1),
@@ -103,7 +103,7 @@ def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_m
                             state, mu_finder(utterance_to_cc(utterance,default_comp_class), sub_mu), 
                             sigma_finder(utterance_to_cc(utterance,default_comp_class), sub_sigma))),
             Pr[listener.state == state]
-        ])
+        ])))
     ]
     # return listener[E[speaker.comp_class == comp_class]]
     listener: observes[speaker.utterance] is real_utterance
@@ -111,4 +111,6 @@ def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_m
     listener: chooses(comp_class in Comp_classes, wpp = E[speaker.default_comp_class == comp_class])
     return E[listener.comp_class == guess_comp_class]
 
-print(comparison(3,0.2))
+print(comparison(1.6,1.2,0.4,threshold_bins("positive", States, bin_param))[:3])
+print(comparison(1.6,1.2,0.4,threshold_bins("negative", States, bin_param))[3:])
+
