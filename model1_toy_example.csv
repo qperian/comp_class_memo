@@ -1,7 +1,7 @@
-comp_class_level	form	model_response
-low	positive	0.7517873
-low	negative	0.65381134
-middle	positive	0.57732147
-middle	negative	0.57527614
-high	positive	0.6665156
-high	negative	0.7538896
+comp_class_level,	form,	model_response
+low,	positive,	0.71115685
+low,	negative,	0.62618524
+middle,	positive,	0.57732147
+middle,	negative,	0.57527614
+high,	positive,	0.6373029
+high,	negative,	0.71383536

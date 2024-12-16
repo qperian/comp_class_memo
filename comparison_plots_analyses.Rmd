@@ -30,14 +30,15 @@ summarize <- dplyr::summarize
 select <- dplyr::select
 
 ## Set plotting preferences
-ggplot2::theme_set(ggplot2::theme_bw(base_size=18))
-ggplot2::theme_update(panel.grid = ggplot2::element_blank(), 
-                      strip.background = ggplot2::element_blank(),
-                      legend.key = ggplot2::element_blank(),
-                      panel.border = ggplot2::element_blank(),
-                      axis.line = ggplot2::element_line(),
-                      strip.text = ggplot2::element_text(face = "bold"),
-                      plot.title = element_text(hjust = 0.5))
+theme_set(theme_minimal(9))
+# ggplot2::theme_set(ggplot2::theme_bw(base_size=18))
+# ggplot2::theme_update(panel.grid = ggplot2::element_blank(), 
+#                       strip.background = ggplot2::element_blank(),
+#                       legend.key = ggplot2::element_blank(),
+#                       panel.border = ggplot2::element_blank(),
+#                       axis.line = ggplot2::element_line(),
+#                       strip.text = ggplot2::element_text(face = "bold"),
+#                       plot.title = element_text(hjust = 0.5))
 # options(ggplot2.discrete.colour= c("blue4", "darkgoldenrod2"))
 # options(ggplot2.discrete.fill= c("blue4", "darkgoldenrod2"))
 # options(ggplot2.discrete.colour= c("#002060", "darkgoldenrod2"))
@@ -45,15 +46,146 @@ ggplot2::theme_update(panel.grid = ggplot2::element_blank(),
 ```
 
 
-```{r expt 2 fit plot + analyses}
+```{r model 1 toy example}
+model1_toy_data <- read_csv("model1_toy_example.csv")
+
+ggplot(model1_toy_data %>%
+                    mutate(comp_class_level = factor(comp_class_level, 
+                                                     levels = c('low', 'middle', 'high'))), 
+       aes(x = comp_class_level, y = model_response, fill = form))+
+  geom_bar(stat= 'identity', 
+           position = position_dodge(), 
+           color = 'black', 
+           alpha = 0.8, width = 0.75)+
+  scale_fill_brewer(palette = "Set3")+
+  geom_hline(yintercept = 0.5, lty = 2)+
+  xlab("Subordinate prior mean")+
+  ylab("Subordinate interpretation")+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0,0.5, 1))+
+  theme(axis.title = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.title = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank())
+  
+
+```
+
+
+
+
+```{r model 2 toy example}
+model2_toy_data <- read_csv("model2_toy_example.csv")
+
+ggplot(model2_toy_data %>%
+                    mutate(comp_class_level = factor(comp_class_level, 
+                                                     levels = c('low', 'middle', 'high'))), 
+       aes(x = comp_class_level, y = model2_output, fill = form))+
+  geom_bar(stat= 'identity', 
+           position = position_dodge(), 
+           color = 'black', 
+           alpha = 0.8, width = 0.75)+
+  scale_fill_brewer(palette = "Set3")+
+  geom_hline(yintercept = 0.5, lty = 2)+
+  xlab("Subordinate prior mean")+
+  ylab("Subordinate probability")+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0,0.5, 1))+
+  theme(axis.title = element_text(size = 12),
+        axis.text = element_text(size = 10),
+        legend.text = element_text(size = 10),
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.title = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank())
+  
+
+```
+
+
+
+
+```{r fit plots + analyses -- both models}
 
 data <- read_csv("total_outputs.csv")
 
+## ugly exploratory plots
 ggplot(data) +
   geom_point(aes(x = expt2_model_output, y = expt2_emp_category_prior))
 
 ggplot(data) +
   geom_point(aes(x = expt1_model_output, y = expt1_emp_comp_class_prob))
+
+
+## reshape data for easier plotting
+data_expt1 <- data %>% select(super_category, sub_category, form, optimal_mu, optimal_sigma,
+                              expt1_emp_comp_class_prob, expt1_model_output) %>%
+  mutate(expt = "expt1") %>%
+  rename(human_endorsement = expt1_emp_comp_class_prob,
+         model_prediction = expt1_model_output)
+
+data_expt2 <- data %>% select(super_category, sub_category, form, optimal_mu, optimal_sigma,
+                              expt2_emp_category_prior, expt2_model_output) %>%
+  mutate(expt = "expt2") %>%
+  rename(human_endorsement = expt2_emp_category_prior,
+         model_prediction = expt2_model_output)
+ 
+data_long <- rbind(data_expt1, data_expt2) %>%
+  mutate(degree = factor(super_category, 
+                         levels = c("people", "kitchen appliances", "days of the year", 
+                                    "things you watch online", "produce"), 
+                         labels = c("height", "price", "temperature", 
+                                    "time", "weight")))
+
+
+
+## make final plot for model fit
+        
+fill.colors <- RColorBrewer::brewer.pal(5, "Set3")
+names(fill.colors) <- levels(data_long$degree)
+
+ggplot(data_long %>%
+         mutate(expt = factor(expt, 
+                       levels = c("expt2", "expt1"),
+                       labels = c('Adjective production', 'Comparison class inference'))),
+         aes(x = model_prediction, xmin = 0, xmax = 1, 
+             y = human_endorsement, ymin = 0, ymax = 1, 
+             shape = form, fill = degree)) +
+  geom_abline(intercept = 0, slope = 1, lty = 3)+
+  geom_point(size = 2.5, color = 'black')+
+  scale_shape_manual(values = c(24, 25))+
+  scale_fill_brewer(palette = "Set3")+
+  facet_wrap(~expt)+
+  coord_fixed(ratio = 1)+
+  xlim(0, 1)+
+  ylim(0, 1)+
+  ylab("Human endorsement")+
+  xlab("Model prediction")+
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.box = "horizontal",
+        legend.position = "bottom",
+        legend.direction = "horizontal",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 8),
+        axis.title = element_text(size = 12),
+        axis.text = element_text(size = 8), 
+        strip.text = element_text(size = 12)
+        )+
+  guides(fill=guide_legend(override.aes=list(colour=fill.colors)), 
+         shape = guide_legend())
+
+# sadge :(
+expt1.r2 <- round(with(data_long %>%
+       filter(expt == "expt1"), cor(model_prediction, human_endorsement))^2, 3)
+# yay!
+expt2.r2 <- round(with(data_long %>%
+       filter(expt == "expt2"), cor(model_prediction, human_endorsement))^2, 3)
+
 
 ```
 

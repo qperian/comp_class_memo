@@ -162,10 +162,10 @@ def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_m
 # subPrior = supPrior = 50 (equal frequencies for both comparison classes)
 # exp1_alpha and beta are optimal parameters from the paper
 
-# low comp class - sub_mu = -1.2, sub_sigma = 0.5
-# low_pos_model1_output = comparison(-1.2,0.5,threshold_bins("positive", States, bin_param), 
+# low comp class - sub_mu = -1, sub_sigma = 0.5
+# low_pos_model1_output = comparison(-1,0.5,threshold_bins("positive", States, bin_param), 
 #                                50, 50, exp1_alpha, beta)[0,0]
-# low_neg_model1_output = comparison(-1.2,0.5,threshold_bins("positive", States, bin_param), 
+# low_neg_model1_output = comparison(-1,0.5,threshold_bins("positive", States, bin_param), 
 #                                50, 50, exp1_alpha, beta)[3,0]
 # print(low_pos_model1_output, low_neg_model1_output)
 
@@ -178,10 +178,10 @@ def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_m
 # print(middle_pos_model1_output, middle_neg_model1_output)
 
 
-# high comp class - sub_mu = 1.2, sub_sigma = 0.5
-# high_pos_model1_output = comparison(1.2,0.5,threshold_bins("positive", States, bin_param), 
+# high comp class - sub_mu = 1, sub_sigma = 0.5
+# high_pos_model1_output = comparison(1,0.5,threshold_bins("positive", States, bin_param), 
 #                                50, 50, exp1_alpha, beta)[0,0]
-# high_neg_model1_output = comparison(1.2,0.5,threshold_bins("positive", States, bin_param), 
+# high_neg_model1_output = comparison(1,0.5,threshold_bins("positive", States, bin_param), 
 #                                50, 50, exp1_alpha, beta)[3,0]
 # print(high_pos_model1_output, high_neg_model1_output)
 
@@ -228,9 +228,9 @@ def exp2_speaker[real_utterance: s2_Utterances](sub_mu, sub_sigma, Thresholds, e
 # toy example for set parameters:
 # exp2_alpha1 and exp2_alpha2 are optimal parameters from the paper
 
-# low comp class - sub_mu = -1.2, sub_sigma = 0.5
-# low_pos_model2_output = exp2_speaker(-1.2, 0.5, threshold_bins("positive", States, bin_param), exp2_alpha1, exp2_alpha2)[1]
-# low_neg_model2_output = exp2_speaker(-1.2, 0.5, threshold_bins("negative", States, bin_param), exp2_alpha1, exp2_alpha2)[3]
+# low comp class - sub_mu = -1, sub_sigma = 0.5
+# low_pos_model2_output = exp2_speaker(-1, 0.5, threshold_bins("positive", States, bin_param), exp2_alpha1, exp2_alpha2)[1]
+# low_neg_model2_output = exp2_speaker(-1, 0.5, threshold_bins("negative", States, bin_param), exp2_alpha1, exp2_alpha2)[3]
 # print(low_pos_model2_output, low_neg_model2_output)
 
 
@@ -240,9 +240,9 @@ def exp2_speaker[real_utterance: s2_Utterances](sub_mu, sub_sigma, Thresholds, e
 # print(middle_pos_model2_output, middle_neg_model2_output)
 
 
-# high comp class - sub_mu = 1.2, sub_sigma = 0.5
-# high_pos_model2_output = exp2_speaker(1.2, 0.5, threshold_bins("positive", States, bin_param), exp2_alpha1, exp2_alpha2)[1]
-# high_neg_model2_output = exp2_speaker(1.2, 0.5, threshold_bins("negative", States, bin_param), exp2_alpha1, exp2_alpha2)[3]
+# high comp class - sub_mu = 1, sub_sigma = 0.5
+# high_pos_model2_output = exp2_speaker(1, 0.5, threshold_bins("positive", States, bin_param), exp2_alpha1, exp2_alpha2)[1]
+# high_neg_model2_output = exp2_speaker(1, 0.5, threshold_bins("negative", States, bin_param), exp2_alpha1, exp2_alpha2)[3]
 # print(high_pos_model2_output, high_neg_model2_output)
 
 
