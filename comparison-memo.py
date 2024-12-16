@@ -290,7 +290,7 @@ for form in ["positive", "negative"]:
             plt.ioff()
             plt.contourf(mus.flatten().reshape(mus.shape), sigs.flatten().reshape(mus.shape), result.reshape(mus.shape), 30)
             plt.colorbar()
-            plt.savefig(f'./mse_plots/{subcat}.png')
+            plt.savefig(f'./mse_plots/{form}_{subcat}.png')
             plt.clf()
             # for t in range(10 + 1):
             #     print("starting a round of descent")
@@ -310,10 +310,10 @@ for form in ["positive", "negative"]:
             optimal_expt2_model_outputs[form][type][subcat] = exp2_speaker(sub_mu, sub_sigma, 
                                                                            threshold_bins(form, States, bin_param), exp2_alpha1, exp2_alpha2)[get_output_idx_model_expt2(form)]
 
-print(empirical_category_priors)
-print(optimal_mus)
-print(optimal_sigmas)
-print(optimal_expt2_model_outputs)
+# print(empirical_category_priors)
+# print(optimal_mus)
+# print(optimal_sigmas)
+# print(optimal_expt2_model_outputs)
 
 # print(empirical_category_priors)
 
