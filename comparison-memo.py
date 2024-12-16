@@ -6,8 +6,9 @@ from functools import partial
 from jax import lax
 import json
 import pandas as pd
-
-
+import matplotlib.pyplot as plt
+import numpy.ma as ma
+import numpy as normalpy
 ## UTIL FUNCTIONS  
 
 # meaning func for expt 1
@@ -85,8 +86,8 @@ def utterance_to_cc(utterance, default):
 
 ## PARAMETERS AND DATA
 
-expt1DataFile = "../data/class-elicitation-full-trials.csv"
-expt2DataFile = "../data/vague-prior-elicitation-1-trials.csv"
+expt1DataFile = "./data/class-elicitation-full-trials.csv"
+expt2DataFile = "./data/vague-prior-elicitation-1-trials.csv"
 
 
 # params/priors for both models
@@ -217,9 +218,15 @@ def get_output_idx_model_expt1(form):
 @partial(jax.jit, static_argnums=(0, 1, 4, 5))
 def mse(data, form, sub_mu, sub_sigma, exp2_alpha1, exp2_alpha2):
     # model_prob = exp2_speaker(sub_mu, sub_sigma, 
-    #                           threshold_bins(form, States, bin_param), exp2_alpha1, exp2_alpha2)[get_output_idx_model_expt2(form)]
-    return np.mean((data - exp2_speaker(sub_mu, sub_sigma, 
-                              threshold_bins(form, States, bin_param), exp2_alpha1, exp2_alpha2)[get_output_idx_model_expt2(form)]) ** 2)
+    #        
+    #                    threshold_bins(form, States, bin_param), exp2_alpha1, exp2_alpha2)[get_output_idx_model_expt2(form)]
+    # return np.mean((data - exp2_speaker(sub_mu, sub_sigma, 
+    #                           threshold_bins(form, States, bin_param), exp2_alpha1, exp2_alpha2)[get_output_idx_model_expt2(form)]) ** 2)
+    thresholded_bins = threshold_bins(form, States, bin_param)
+    model_output = exp2_speaker(sub_mu, sub_sigma, thresholded_bins, exp2_alpha1, exp2_alpha2)
+
+    model_prob = model_output[get_output_idx_model_expt2(form)]
+    return np.mean((data - model_prob) ** 2)
 grad = jax.value_and_grad(mse)
 
 # print(mse(0, "positive", 3, 0.5, exp2_alpha1, exp2_alpha2))
@@ -263,18 +270,40 @@ for form in ["positive", "negative"]:
             sigmas = []
             mus = []
             mses = []
+            mu_grid = np.linspace(-5, 5, 100)
+            sig_grid = np.linspace(-5, 5, 100)
+            mus, sigs = np.meshgrid(mu_grid,sig_grid)
+            grid=np.array([mus.flatten(),sigs.flatten()]).T
+            print(empirical_prob)
+            @jax.jit 
+            def mse_specific(tup):
+                return mse(empirical_prob, form, tup[0], tup[1], exp2_alpha1, exp2_alpha2)
+            print(len(grid))
+            
+            result = jax.vmap(mse_specific)(grid)
+            minarg = normalpy.argmin(ma.masked_where(result==0, result))
+            thresholded_bins = threshold_bins(form, States, bin_param)
+            print(exp2_speaker(*grid[minarg], thresholded_bins, exp2_alpha1, exp2_alpha2))
+            print(grid[minarg], result[minarg])
+            print(mus.shape, sigs.shape, result.shape)
+            sub_mu, sub_sigma = grid[minarg]
+            plt.ioff()
+            plt.contourf(mus.flatten().reshape(mus.shape), sigs.flatten().reshape(mus.shape), result.reshape(mus.shape), 30)
+            plt.colorbar()
+            plt.savefig(f'./mse_plots/{subcat}.png')
+            plt.clf()
+            # for t in range(10 + 1):
+            #     print("starting a round of descent")
+            #     mse_value, mse_grad = grad(empirical_prob, form, sub_mu, sub_sigma, exp2_alpha1, exp2_alpha2)
+            #     print("graduated!")
+            #     sub_mu = sub_mu - 0.01 * mse_grad
+            #     sub_sigma = sub_sigma - 0.01 * mse_grad
+            #     if t % 10 == 0:
+            #         sigmas.append(sub_sigma)
+            #         mus.append(sub_mu)
+            #         mses.append(mse_value)
+            #     print(sub_mu, sub_sigma)
 
-            for t in range(10 + 1):
-                print("starting a round of descent")
-                mse_value, mse_grad = grad(empirical_prob, form, sub_mu, sub_sigma, exp2_alpha1, exp2_alpha2)
-                print("graduated!")
-                sub_mu = sub_mu - 0.01 * mse_grad
-                sub_sigma = sub_sigma - 0.01 * mse_grad
-                if t % 10 == 0:
-                    sigmas.append(sub_sigma)
-                    mus.append(sub_mu)
-                    mses.append(mse_value)
-                print(sub_mu, sub_sigma)
             print("optimal values found for", subcat)
             optimal_sigmas[form][type][subcat] = sub_sigma
             optimal_mus[form][type][subcat] = sub_mu
