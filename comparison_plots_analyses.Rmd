@@ -1,0 +1,59 @@
+---
+title: "Plots and analyses for 9.66 comparison memo project"
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r setup}
+## Load libraries
+if(!require(tidyverse)) {install.packages("tidyverse"); require(tidyverse)}
+if(!require(rstudioapi)) {install.packages("rstudioapi"); require(rstudioapi)}
+if(!require(lme4)) {install.packages("lme4"); require(lme4)}
+if(!require(lmerTest)) {install.packages("lmerTest"); require(lmerTest)}
+if(!require(ordinal)) {install.packages("ordinal"); require(ordinal)}
+if(!require(performance)) {install.packages("performance"); require(performance)}
+if(!require(sjPlot)) {install.packages("sjPlot"); require(sjPlot)}
+if(!require(MPsychoR)) {install.packages("MPsychoR"); require(MPsychoR)}
+if(!require(languageR)) {install.packages("languageR"); require(languageR)}
+if(!require(stats)) {install.packages("stats"); require(stats)}
+if(!require(rstatix)) {install.packages("rstatix"); require(rstatix)}
+if(!require(car)) {install.packages("car"); require(car)}
+
+## Set working directory
+setwd(dirname(rstudioapi::getActiveDocumentContext()$`path`))
+
+## Set function defaults
+filter <- dplyr::filter
+group_by <- dplyr::group_by
+summarize <- dplyr::summarize
+select <- dplyr::select
+
+## Set plotting preferences
+ggplot2::theme_set(ggplot2::theme_bw(base_size=18))
+ggplot2::theme_update(panel.grid = ggplot2::element_blank(), 
+                      strip.background = ggplot2::element_blank(),
+                      legend.key = ggplot2::element_blank(),
+                      panel.border = ggplot2::element_blank(),
+                      axis.line = ggplot2::element_line(),
+                      strip.text = ggplot2::element_text(face = "bold"),
+                      plot.title = element_text(hjust = 0.5))
+# options(ggplot2.discrete.colour= c("blue4", "darkgoldenrod2"))
+# options(ggplot2.discrete.fill= c("blue4", "darkgoldenrod2"))
+# options(ggplot2.discrete.colour= c("#002060", "darkgoldenrod2"))
+# options(ggplot2.discrete.fill= c("#002060", "darkgoldenrod2"))
+```
+
+
+```{r expt 2 fit plot + analyses}
+
+data <- read_csv("total_outputs.csv")
+
+ggplot(data) +
+  geom_point(aes(x = expt2_model_output, y = expt2_emp_category_prior))
+
+ggplot(data) +
+  geom_point(aes(x = expt1_model_output, y = expt1_emp_comp_class_prob))
+
+```
+

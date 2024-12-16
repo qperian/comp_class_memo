@@ -329,66 +329,72 @@ d_output = {"super_category": [],
             "expt1_emp_comp_class_prob": [], 
             "optimal_mu": [],
             "optimal_sigma": [],
-            "expt2_model_output": [], 
-            "expt1_model_output": []}
+            "expt2_model_output": [],
+            "expt1_model_output": []
+            }
 
 expt1_data = pd.read_csv(expt1DataFile)
 
-with open('webgram.json') as json_file:
-    priors = json.load(json_file)
-for type, dists in priors.items():
-    # print(type)
-    supPrior = sum(dists['super'])
-    type_df = expt1_data[expt1_data["super_category"] == type]
+# with open('webgram.json') as json_file:
+#     priors = json.load(json_file)
+# for type, dists in priors.items():
+#     # print(type)
+#     supPrior = sum(dists['super'])
+#     type_df = expt1_data[expt1_data["super_category"] == type]
     
-    for subcat, freqs in dists['sub'].items():
-        subPrior = sum(freqs)/(sum(freqs)+supPrior)
-        supPrior = supPrior/(subPrior+supPrior)
+#     for subcat, freqs in dists['sub'].items():
+#         subPrior = sum(freqs)/(sum(freqs)+supPrior)
+#         supPrior = supPrior/(subPrior+supPrior)
 
-        subcat_df = type_df[type_df["sub_category"] == subcat]
+#         subcat_df = type_df[type_df["sub_category"] == subcat]
 
-        print(f"subcat: {subcat}, supercat: {type}")
+#         print(f"subcat: {subcat}, supercat: {type}")
         
-        pos_mu = optimal_mus["positive"][type][subcat]
-        pos_sigma = optimal_sigmas["positive"][type][subcat]
-        pos_model1_output = comparison(pos_mu, pos_sigma, threshold_bins("positive", States, bin_param),
-                                       subPrior, supPrior, exp1_alpha, beta)[0, 0]
-        print(pos_model1_output)
-        pos_df = subcat_df[subcat_df["form"] == "positive"]
-        pos_empirical_output = pos_df["binary_response"].mean()
-        d_output["super_category"].append(type)
-        d_output["sub_category"].append(subcat)
-        d_output["form"].append("positive")
-        d_output["expt2_emp_category_prior"].append(empirical_category_priors["positive"][type][subcat])
-        d_output["expt1_emp_comp_class_prob"].append(pos_empirical_output)
-        d_output["optimal_mu"].append(pos_mu)
-        d_output["optimal_sigma"].append(pos_sigma)
-        d_output["expt2_model_output"].append(optimal_expt2_model_outputs["positive"][type][subcat])
-        d_output["expt1_model_output"].append(pos_model1_output)
+#         pos_mu = optimal_mus["positive"][type][subcat]
+#         pos_sigma = optimal_sigmas["positive"][type][subcat]
+#         print("pos", pos_mu, pos_sigma)
+#         pos_model1_output = comparison(0, 0.5,
+#             #   optimal_mus["positive"][type][subcat], 
+#             #                            optimal_sigmas["positive"][type][subcat], 
+#                                        threshold_bins("positive", States, bin_param),
+#                                        subPrior, supPrior, exp1_alpha, beta)[0, 0]
+#         print(pos_model1_output)
+#         pos_df = subcat_df[subcat_df["form"] == "positive"]
+#         pos_empirical_output = pos_df["binary_response"].mean()
+#         d_output["super_category"].append(type)
+#         d_output["sub_category"].append(subcat)
+#         d_output["form"].append("positive")
+#         d_output["expt2_emp_category_prior"].append(empirical_category_priors["positive"][type][subcat])
+#         d_output["expt1_emp_comp_class_prob"].append(pos_empirical_output)
+#         d_output["optimal_mu"].append(pos_mu)
+#         d_output["optimal_sigma"].append(pos_sigma)
+#         d_output["expt2_model_output"].append(optimal_expt2_model_outputs["positive"][type][subcat])
+#         d_output["expt1_model_output"].append(pos_model1_output)
 
 
-        neg_mu = optimal_mus["negative"][type][subcat]
-        neg_sigma = optimal_sigmas["negative"][type][subcat]
-        neg_model1_output = comparison(neg_mu, neg_sigma, threshold_bins("negative", States, bin_param),
-                                       subPrior, supPrior, exp1_alpha, beta)[3, 0]
-        print(neg_model1_output)
-        neg_df = subcat_df[subcat_df["form"] == "negative"]
-        neg_empirical_output = neg_df["binary_response"].mean()
-        d_output["super_category"].append(type)
-        d_output["sub_category"].append(subcat)
-        d_output["form"].append("negative")
-        d_output["expt2_emp_category_prior"].append(empirical_category_priors["negative"][type][subcat])
-        d_output["expt1_emp_comp_class_prob"].append(neg_empirical_output)
-        d_output["optimal_mu"].append(neg_mu)
-        d_output["optimal_sigma"].append(neg_sigma)
-        d_output["expt2_model_output"].append(optimal_expt2_model_outputs["negative"][type][subcat])
-        d_output["expt1_model_output"].append(neg_model1_output)
+#         neg_mu = optimal_mus["negative"][type][subcat]
+#         neg_sigma = optimal_sigmas["negative"][type][subcat]
+#         print("neg", neg_mu, neg_sigma)
+#         neg_model1_output = comparison(0, 0.5, threshold_bins("negative", States, bin_param),
+#                                        subPrior, supPrior, exp1_alpha, beta)[3, 0]
+#         print(neg_model1_output)
+#         neg_df = subcat_df[subcat_df["form"] == "negative"]
+#         neg_empirical_output = neg_df["binary_response"].mean()
+#         d_output["super_category"].append(type)
+#         d_output["sub_category"].append(subcat)
+#         d_output["form"].append("negative")
+#         d_output["expt2_emp_category_prior"].append(empirical_category_priors["negative"][type][subcat])
+#         d_output["expt1_emp_comp_class_prob"].append(neg_empirical_output)
+#         d_output["optimal_mu"].append(neg_mu)
+#         d_output["optimal_sigma"].append(neg_sigma)
+#         d_output["expt2_model_output"].append(optimal_expt2_model_outputs["negative"][type][subcat])
+#         d_output["expt1_model_output"].append(neg_model1_output)
 
-        # print(comparison(1.2,0.4,threshold_bins("positive", States, bin_param), 
-        #                 #  subPrior, supPrior, exp1_alpha, beta)[:3])
-        #                 subPrior, supPrior, exp1_alpha, beta)[0,0])
-        # print(comparison(1.2,0.4,threshold_bins("negative", States, bin_param), 
-        #                  subPrior, supPrior, exp1_alpha, beta)[3,0])
+#         # print(comparison(pos_mu,pos_sigma,threshold_bins("positive", States, bin_param), 
+#         #                 #  subPrior, supPrior, exp1_alpha, beta)[:3])
+#         #                 subPrior, supPrior, exp1_alpha, beta)[0,0])
+#         # print(comparison(neg_mu,neg_sigma,threshold_bins("negative", States, bin_param), 
+#         #                  subPrior, supPrior, exp1_alpha, beta)[3,0])
 
 # df_output = pd.DataFrame(d_output)
 # df_output.to_csv("total_outputs.csv")
