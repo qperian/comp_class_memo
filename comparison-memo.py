@@ -270,8 +270,8 @@ for form in ["positive", "negative"]:
             sigmas = []
             mus = []
             mses = []
-            mu_grid = np.linspace(-5, 5, 100)
-            sig_grid = np.linspace(-5, 5, 100)
+            mu_grid = np.linspace(-3, 3, 100)
+            sig_grid = np.linspace(0, 5, 100)
             mus, sigs = np.meshgrid(mu_grid,sig_grid)
             grid=np.array([mus.flatten(),sigs.flatten()]).T
             print(empirical_prob)
