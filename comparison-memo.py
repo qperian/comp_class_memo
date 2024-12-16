@@ -157,6 +157,36 @@ def comparison[real_utterance: Utterances, guess_comp_class: Comp_classes](sub_m
 
 
 
+## EXPT 1 MODEL TOY EXAMPLE
+# toy example for set parameters:
+# subPrior = supPrior = 50 (equal frequencies for both comparison classes)
+# exp1_alpha and beta are optimal parameters from the paper
+
+# low comp class - sub_mu = -1.2, sub_sigma = 0.5
+# low_pos_model1_output = comparison(-1.2,0.5,threshold_bins("positive", States, bin_param), 
+#                                50, 50, exp1_alpha, beta)[0,0]
+# low_neg_model1_output = comparison(-1.2,0.5,threshold_bins("positive", States, bin_param), 
+#                                50, 50, exp1_alpha, beta)[3,0]
+# print(low_pos_model1_output, low_neg_model1_output)
+
+
+# middle comp class - sub_mu = 0, sub_sigma = 0.5
+# middle_pos_model1_output = comparison(0,0.5,threshold_bins("positive", States, bin_param), 
+#                                50, 50, exp1_alpha, beta)[0,0]
+# middle_neg_model1_output = comparison(0,0.5,threshold_bins("positive", States, bin_param), 
+#                                50, 50, exp1_alpha, beta)[3,0]
+# print(middle_pos_model1_output, middle_neg_model1_output)
+
+
+# high comp class - sub_mu = 1.2, sub_sigma = 0.5
+# high_pos_model1_output = comparison(1.2,0.5,threshold_bins("positive", States, bin_param), 
+#                                50, 50, exp1_alpha, beta)[0,0]
+# high_neg_model1_output = comparison(1.2,0.5,threshold_bins("positive", States, bin_param), 
+#                                50, 50, exp1_alpha, beta)[3,0]
+# print(high_pos_model1_output, high_neg_model1_output)
+
+
+
 
 
 ## EXPT 2 MODEL
@@ -194,26 +224,43 @@ def exp2_speaker[real_utterance: s2_Utterances](sub_mu, sub_sigma, Thresholds, e
 # print(exp2_speaker(3, 0.5, threshold_bins("negative", States, bin_param), exp2_alpha1, exp2_alpha2)[2:])
 
 
-# expt2DataFile
+## EXPT 2 MODEL TOY EXAMPLE
+# toy example for set parameters:
+# exp2_alpha1 and exp2_alpha2 are optimal parameters from the paper
+
+# low comp class - sub_mu = -1.2, sub_sigma = 0.5
+# low_pos_model2_output = exp2_speaker(-1.2, 0.5, threshold_bins("positive", States, bin_param), exp2_alpha1, exp2_alpha2)[1]
+# low_neg_model2_output = exp2_speaker(-1.2, 0.5, threshold_bins("negative", States, bin_param), exp2_alpha1, exp2_alpha2)[3]
+# print(low_pos_model2_output, low_neg_model2_output)
+
+
+# middle comp class - sub_mu = 0, sub_sigma = 0.5
+# middle_pos_model2_output = exp2_speaker(0, 0.5, threshold_bins("positive", States, bin_param), exp2_alpha1, exp2_alpha2)[1]
+# middle_neg_model2_output = exp2_speaker(0, 0.5, threshold_bins("negative", States, bin_param), exp2_alpha1, exp2_alpha2)[3]
+# print(middle_pos_model2_output, middle_neg_model2_output)
+
+
+# high comp class - sub_mu = 1.2, sub_sigma = 0.5
+# high_pos_model2_output = exp2_speaker(1.2, 0.5, threshold_bins("positive", States, bin_param), exp2_alpha1, exp2_alpha2)[1]
+# high_neg_model2_output = exp2_speaker(1.2, 0.5, threshold_bins("negative", States, bin_param), exp2_alpha1, exp2_alpha2)[3]
+# print(high_pos_model2_output, high_neg_model2_output)
+
+
+
+
+
 
 ## EXPT 2 MODEL FITTING
 
 # stupid function to get the index needed from each model output
 @partial(jax.jit, static_argnums=(0))
 def get_output_idx_model_expt2(form):   
-    return lax.cond(form == "positive", lambda _: 0, lambda _: 2, 0)
+    return lax.cond(form == "positive", lambda _: 1, lambda _: 3, 0)
     # if form == "positive":
-    #     return 0
+    #     return 1
     # if form == "negative":
-    #     return 2
+    #     return 3
 
-# TO FIX -- check the output format
-@partial(jax.jit, static_argnums=(0))
-def get_output_idx_model_expt1(form):
-    if form == "positive":
-        return "hi"
-    if form == "negative":
-        return "blah"
 
 # fit-evaluation function (MSE)
 @partial(jax.jit, static_argnums=(0, 1, 4, 5))
@@ -244,72 +291,72 @@ optimal_sigmas = {}
 optimal_mus = {}
 optimal_expt2_model_outputs = {}
 
-for form in ["positive", "negative"]:
-    form_df = expt_2_data[expt_2_data["form"] == form]
+# for form in ["positive", "negative"]:
+#     form_df = expt_2_data[expt_2_data["form"] == form]
     
-    empirical_category_priors[form] = {}
-    optimal_sigmas[form] = {}
-    optimal_mus[form] = {}
-    optimal_expt2_model_outputs[form] = {}
+#     empirical_category_priors[form] = {}
+#     optimal_sigmas[form] = {}
+#     optimal_mus[form] = {}
+#     optimal_expt2_model_outputs[form] = {}
 
-    for type, dists in priors.items():
-        type_df = form_df[form_df["super_category"] == type]
+#     for type, dists in priors.items():
+#         type_df = form_df[form_df["super_category"] == type]
 
-        empirical_category_priors[form][type] = {}
-        optimal_sigmas[form][type] = {}
-        optimal_mus[form][type] = {}
-        optimal_expt2_model_outputs[form][type] = {}
+#         empirical_category_priors[form][type] = {}
+#         optimal_sigmas[form][type] = {}
+#         optimal_mus[form][type] = {}
+#         optimal_expt2_model_outputs[form][type] = {}
 
-        for subcat, freqs in dists['sub'].items():
-            subcat_df = type_df[type_df["sub_category"] == subcat]
-            empirical_prob = subcat_df["response"].mean()
-            # print(form, subcat, empirical_prob)
-            empirical_category_priors[form][type][subcat] = empirical_prob
+#         for subcat, freqs in dists['sub'].items():
+#             subcat_df = type_df[type_df["sub_category"] == subcat]
+#             empirical_prob = subcat_df["response"].mean()
+#             # print(form, subcat, empirical_prob)
+#             empirical_category_priors[form][type][subcat] = empirical_prob
 
-            sub_mu = 0       # initial value, might need to change
-            sub_sigma = 0.5        # initial value, might need to change
-            sigmas = []
-            mus = []
-            mses = []
-            mu_grid = np.linspace(-3, 3, 100)
-            sig_grid = np.linspace(0, 5, 100)
-            mus, sigs = np.meshgrid(mu_grid,sig_grid)
-            grid=np.array([mus.flatten(),sigs.flatten()]).T
-            print(empirical_prob)
-            @jax.jit 
-            def mse_specific(tup):
-                return mse(empirical_prob, form, tup[0], tup[1], exp2_alpha1, exp2_alpha2)
-            # print(len(grid))
+#             sub_mu = 0       # initial value, might need to change
+#             sub_sigma = 0.5        # initial value, might need to change
+#             sigmas = []
+#             mus = []
+#             mses = []
+#             mu_grid = np.linspace(-3, 3, 100)
+#             sig_grid = np.linspace(0, 5, 100)
+#             mus, sigs = np.meshgrid(mu_grid,sig_grid)
+#             grid=np.array([mus.flatten(),sigs.flatten()]).T
+#             print(empirical_prob)
+#             @jax.jit 
+#             def mse_specific(tup):
+#                 return mse(empirical_prob, form, tup[0], tup[1], exp2_alpha1, exp2_alpha2)
+#             # print(len(grid))
             
-            result = jax.vmap(mse_specific)(grid)
-            minarg = normalpy.argmin(ma.masked_where(result==0, result))
-            thresholded_bins = threshold_bins(form, States, bin_param)
-            print(exp2_speaker(*grid[minarg], thresholded_bins, exp2_alpha1, exp2_alpha2))
-            print(grid[minarg], result[minarg])
-            # print(mus.shape, sigs.shape, result.shape)
-            sub_mu, sub_sigma = grid[minarg]
-            plt.ioff()
-            plt.contourf(mus.flatten().reshape(mus.shape), sigs.flatten().reshape(mus.shape), result.reshape(mus.shape), 30)
-            plt.colorbar()
-            plt.savefig(f'./mse_plots/{form}_{subcat}.png')
-            plt.clf()
-            # for t in range(10 + 1):
-            #     print("starting a round of descent")
-            #     mse_value, mse_grad = grad(empirical_prob, form, sub_mu, sub_sigma, exp2_alpha1, exp2_alpha2)
-            #     print("graduated!")
-            #     sub_mu = sub_mu - 0.01 * mse_grad
-            #     sub_sigma = sub_sigma - 0.01 * mse_grad
-            #     if t % 10 == 0:
-            #         sigmas.append(sub_sigma)
-            #         mus.append(sub_mu)
-            #         mses.append(mse_value)
-            #     print(sub_mu, sub_sigma)
+#             result = jax.vmap(mse_specific)(grid)
+#             minarg = normalpy.argmin(ma.masked_where(result==0, result))
+#             thresholded_bins = threshold_bins(form, States, bin_param)
+#             print(exp2_speaker(*grid[minarg], thresholded_bins, exp2_alpha1, exp2_alpha2))
+#             print(grid[minarg], result[minarg])
+#             # print(mus.shape, sigs.shape, result.shape)
+#             sub_mu, sub_sigma = grid[minarg]
+#             plt.ioff()
+#             plt.contourf(mus.flatten().reshape(mus.shape), sigs.flatten().reshape(mus.shape), result.reshape(mus.shape), 30)
+#             plt.colorbar()
+#             plt.savefig(f'./mse_plots/{form}_{subcat}.png')
+#             plt.clf()
+#             # for t in range(10 + 1):
+#             #     print("starting a round of descent")
+#             #     mse_value, mse_grad = grad(empirical_prob, form, sub_mu, sub_sigma, exp2_alpha1, exp2_alpha2)
+#             #     print("graduated!")
+#             #     sub_mu = sub_mu - 0.01 * mse_grad
+#             #     sub_sigma = sub_sigma - 0.01 * mse_grad
+#             #     if t % 10 == 0:
+#             #         sigmas.append(sub_sigma)
+#             #         mus.append(sub_mu)
+#             #         mses.append(mse_value)
+#             #     print(sub_mu, sub_sigma)
 
-            print("optimal values found for", subcat)
-            optimal_sigmas[form][type][subcat] = sub_sigma
-            optimal_mus[form][type][subcat] = sub_mu
-            optimal_expt2_model_outputs[form][type][subcat] = exp2_speaker(sub_mu, sub_sigma, 
-                                                                           threshold_bins(form, States, bin_param), exp2_alpha1, exp2_alpha2)[get_output_idx_model_expt2(form)]
+#             print("optimal values found for", subcat)
+#             optimal_sigmas[form][type][subcat] = sub_sigma
+#             optimal_mus[form][type][subcat] = sub_mu
+#             optimal_expt2_model_outputs[form][type][subcat] = exp2_speaker(sub_mu, sub_sigma, 
+#                                                                            threshold_bins(form, States, bin_param), exp2_alpha1, exp2_alpha2)[get_output_idx_model_expt2(form)]
 
 # print(empirical_category_priors)
 # print(optimal_mus)
