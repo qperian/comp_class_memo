@@ -91,7 +91,7 @@ ggplot(model2_toy_data %>%
   scale_fill_brewer(palette = "Set3")+
   geom_hline(yintercept = 0.5, lty = 2)+
   xlab("Subordinate prior mean")+
-  ylab("Subordinate probability")+
+  ylab("Adjective endorsement")+
   scale_y_continuous(limits = c(0, 1), breaks = c(0,0.5, 1))+
   theme(axis.title = element_text(size = 12),
         axis.text = element_text(size = 10),
@@ -185,6 +185,8 @@ expt1.r2 <- round(with(data_long %>%
 # yay!
 expt2.r2 <- round(with(data_long %>%
        filter(expt == "expt2"), cor(model_prediction, human_endorsement))^2, 3)
+expt2.r2_full <- with(data_long %>%
+       filter(expt == "expt2"), cor(model_prediction, human_endorsement))^2
 
 
 ```
